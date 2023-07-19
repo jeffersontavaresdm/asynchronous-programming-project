@@ -19,13 +19,15 @@ public class Runner implements CommandLineRunner {
 
   @Override
   public void run(String... args) {
-    SubscribeRequest subscricaoCep = SubscribeRequest.builder()
+    SubscribeRequest subscricaoCep = SubscribeRequest
+      .builder()
       .protocol("sqs")
       .endpoint("arn:aws:sqs:us-east-1:000000000000:consulta-cep-queue")
       .topicArn("arn:aws:sns:us-east-1:000000000000:contratacao")
       .build();
 
-    SubscribeRequest subscricaoCpf = SubscribeRequest.builder()
+    SubscribeRequest subscricaoCpf = SubscribeRequest
+      .builder()
       .protocol("sqs")
       .endpoint("arn:aws:sqs:us-east-1:000000000000:consulta-cpf-queue")
       .topicArn("arn:aws:sns:us-east-1:000000000000:contratacao")

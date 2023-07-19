@@ -4,6 +4,7 @@ sendo-message:      aws --endpoint-url=http://localhost:4566 sqs send-message --
 receive-message:    aws --endpoint-url=http://localhost:4566 sqs receive-message --queue-url http://localhost:4566/000000000000/fila-contratacao --profile localstack --region us-east-1
 delete-message:     aws --endpoint-url=http://localhost:4566 sqs delete-message --queue-url http://localhost:4566/000000000000/fila-contratacao --receipt-handle <ReceiptHandle> --profile localstack --region us-east-1
 
+docker exec -it CONTAINER_ID /bin/bash
 
 awslocal sns create-topic --name contratacao
 awslocal sqs create-queue --queue-name consulta-cep-queue

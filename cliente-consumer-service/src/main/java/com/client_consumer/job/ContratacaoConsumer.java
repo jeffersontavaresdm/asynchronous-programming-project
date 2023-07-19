@@ -1,25 +1,21 @@
 package com.client_consumer.job;
 
-import com.client_consumer.entity.Cliente;
-import com.client_consumer.entity.Endereco;
 import com.client_consumer.entity.dto.ContratacaoMessage;
-import com.client_consumer.entity.dto.EnderecoDTO;
 import com.client_consumer.entity.dto.SnsTopicMessage;
 import com.client_consumer.repository.ClienteRepository;
 import com.client_consumer.repository.EnderecoRepository;
+import com.client_consumer.util.CPFValidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.sqs.annotation.SqsListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 @Component
 @Slf4j
 public class ContratacaoConsumer {
 
-  private final String VIA_CEP_URL = "https://viacep.com.br/ws/{cep}/json/";
+  private final String API_URL = "http://...";
   private final ClienteRepository clienteRepository;
   private final EnderecoRepository enderecoRepository;
 
@@ -28,7 +24,7 @@ public class ContratacaoConsumer {
     this.enderecoRepository = enderecoRepository;
   }
 
-  @SqsListener("consulta-cep-queue")
+  @SqsListener("consulta-cpf-queue")
   public void listen(SnsTopicMessage snsTopicMessage) {
     ObjectMapper mapper = new ObjectMapper();
 
@@ -39,21 +35,31 @@ public class ContratacaoConsumer {
       throw new RuntimeException(e);
     }
 
-    String url = UriComponentsBuilder
-      .fromUriString(VIA_CEP_URL)
-      .buildAndExpand(message.cep())
-      .toUriString();
+    // Validar o CPF
+    boolean cpfValidator = CPFValidator.isValid(message.cpf());
 
-    RestTemplate restTemplate = new RestTemplate();
-    EnderecoDTO enderecoDTO = restTemplate.getForObject(url, EnderecoDTO.class);
-
-    if (enderecoDTO != null && enderecoDTO.cep() != null) {
-      Endereco endereco = enderecoRepository.saveAndFlush(enderecoDTO.toEntity());
-      Cliente cliente = clienteRepository.save(new Cliente(null, message.cliente(), endereco));
-
-      log.info("Cliente: {}", cliente);
+    if (cpfValidator) {
+      System.out.println("CPF válido");
     } else {
-      log.error("Endereço não encontrado...");
+      System.out.println("CPF inválido");
     }
+
+    //    String url = UriComponentsBuilder
+    //      .fromUriString("https://.../{cpf}")
+    //      .buildAndExpand(message.cpf())
+    //      .toUriString();
+    //
+    //    RestTemplate restTemplate = new RestTemplate();
+    //    Dados dados = restTemplate.getForObject(url, Dados.class);
+    //
+    //    if (Objects.nonNull(dados)) {
+    //      dadosRepository.save(dados);
+    //
+    //      log.info("Dados: {}", dados);
+    //    } else {
+    //      log.error("Endereço não encontrado...");
+    //    }
+    //
+    // salvar no banco...
   }
 }
