@@ -27,15 +27,9 @@
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
 
-        <!--aws-->
-<!--        <dependency>-->
-<!--            <groupId>software.amazon.awssdk</groupId>-->
-<!--            <artifactId>aws-sdk-java</artifactId>-->
-<!--            <version>2.20.103</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
-            <artifactId>sqs</artifactId>
+            <artifactId>sns</artifactId>
             <version>2.20.103</version>
         </dependency>
 

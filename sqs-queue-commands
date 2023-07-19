@@ -1,5 +1,0 @@
-config:             aws configure --profile localstack
-create-queue:       aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name fila-contratacao --profile localstack
-sendo-message:      aws --endpoint-url=http://localhost:4566 sqs send-message --queue-url http://localhost:4566/000000000000/fila-contratacao --message-body "minha mensagem" --profile localstack --region us-east-1
-receive-message:    aws --endpoint-url=http://localhost:4566 sqs receive-message --queue-url http://localhost:4566/000000000000/fila-contratacao --profile localstack --region us-east-1
-delete-message:     aws --endpoint-url=http://localhost:4566 sqs delete-message --queue-url http://localhost:4566/000000000000/fila-contratacao --receipt-handle <ReceiptHandle> --profile localstack --region us-east-1

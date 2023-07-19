@@ -1,0 +1,19 @@
+config:             aws configure --profile localstack
+create-queue:       aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name fila-contratacao --profile localstack
+sendo-message:      aws --endpoint-url=http://localhost:4566 sqs send-message --queue-url http://localhost:4566/000000000000/fila-contratacao --message-body "minha mensagem" --profile localstack --region us-east-1
+receive-message:    aws --endpoint-url=http://localhost:4566 sqs receive-message --queue-url http://localhost:4566/000000000000/fila-contratacao --profile localstack --region us-east-1
+delete-message:     aws --endpoint-url=http://localhost:4566 sqs delete-message --queue-url http://localhost:4566/000000000000/fila-contratacao --receipt-handle <ReceiptHandle> --profile localstack --region us-east-1
+
+
+awslocal sns create-topic --name contratacao
+awslocal sqs create-queue --queue-name consulta-cep-queue
+awslocal sqs create-queue --queue-name consulta-cpf-queue
+
+awslocal sqs get-queue-attributes --queue-url http://localhost:4566/000000000000/consulta-cep-queue --attribute-names QueueArn
+awslocal sqs get-queue-attributes --queue-url http://localhost:4566/000000000000/consulta-cpf-queue --attribute-names QueueArn
+
+arn:aws:sns:us-east-1:000000000000:contratacao
+arn:aws:sqs:us-east-1:000000000000:consulta-cep-queue
+arn:aws:sqs:us-east-1:000000000000:consulta-cpf-queue
+
+awslocal sns subscribe ––topic-arn arn:aws:sns:us-east-1:000000000000:contratacao ––protocol sqs ––notification-endpoint arn:aws:sqs:us-east-1:000000000000:consulta-cep-queue ––attributes RawMessageDelivery=true

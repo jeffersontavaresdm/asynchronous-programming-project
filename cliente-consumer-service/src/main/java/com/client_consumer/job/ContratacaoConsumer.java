@@ -4,8 +4,11 @@ import com.client_consumer.entity.Cliente;
 import com.client_consumer.entity.Endereco;
 import com.client_consumer.entity.dto.ContratacaoMessage;
 import com.client_consumer.entity.dto.EnderecoDTO;
+import com.client_consumer.entity.dto.SnsTopicMessage;
 import com.client_consumer.repository.ClienteRepository;
 import com.client_consumer.repository.EnderecoRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.sqs.annotation.SqsListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -25,8 +28,17 @@ public class ContratacaoConsumer {
     this.enderecoRepository = enderecoRepository;
   }
 
-  @SqsListener("fila-contratacao")
-  public void listen(ContratacaoMessage message) {
+  @SqsListener("consulta-cep-queue")
+  public void listen(SnsTopicMessage snsTopicMessage) {
+    ObjectMapper mapper = new ObjectMapper();
+
+    ContratacaoMessage message;
+    try {
+      message = mapper.readValue(snsTopicMessage.Message(), ContratacaoMessage.class);
+    } catch (JsonProcessingException e) {
+      throw new RuntimeException(e);
+    }
+
     String url = UriComponentsBuilder
       .fromUriString(VIA_CEP_URL)
       .buildAndExpand(message.cep())
