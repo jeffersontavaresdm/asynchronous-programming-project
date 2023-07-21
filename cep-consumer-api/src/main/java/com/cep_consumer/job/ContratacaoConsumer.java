@@ -7,6 +7,7 @@ import com.cep_consumer.entity.dto.EnderecoDTO;
 import com.cep_consumer.entity.dto.SnsTopicMessage;
 import com.cep_consumer.repository.ClienteRepository;
 import com.cep_consumer.repository.EnderecoRepository;
+import com.cep_consumer.util.RedisCacheManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.awspring.cloud.sqs.annotation.SqsListener;
@@ -44,13 +45,12 @@ public class ContratacaoConsumer {
       throw new RuntimeException(e);
     }
 
-    EnderecoDTO enderecoDTO = getAddressFromCacheOrApi(message.cep());
+    EnderecoDTO enderecoDTO = getEndereco(message.cep());
 
     if (enderecoDTO != null && enderecoDTO.cep() != null) {
-      Endereco endereco = enderecoRepository.saveAndFlush(enderecoDTO.toEntity());
+      Endereco endereco = enderecoRepository.save(enderecoDTO.toEntity());
       Cliente cliente = clienteRepository.save(new Cliente(null, message.cliente(), endereco));
 
-      // Adicione o cliente ao cache do Redis após salvar no banco
       redisCacheManager.cacheCliente(cliente);
 
       log.info("Cliente salvo no banco de dados. Cliente: {}", cliente.getNome());
@@ -59,17 +59,12 @@ public class ContratacaoConsumer {
     }
   }
 
-  public EnderecoDTO getAddressFromCacheOrApi(String cep) {
-    log.info("Buscando endereço no Redis!");
+  public EnderecoDTO getEndereco(String cep) {
+    EnderecoDTO enderecoDTO = redisCacheManager.getEnderecoByRedisCache(cep);
 
-    // Tenta buscar o endereço do cache do Redis
-    EnderecoDTO enderecoDTO = redisCacheManager.getAddressFromCache(cep);
-
-    // Se não encontrado no cache, busca na API ViaCEP
     if (enderecoDTO == null) {
-      log.info("Buscando endereço no VIA CEP!");
-
       RestTemplate restTemplate = new RestTemplate();
+
       String VIA_CEP_URL = "https://viacep.com.br/ws/{cep}/json/";
       String url = UriComponentsBuilder
         .fromUriString(VIA_CEP_URL)
@@ -78,10 +73,11 @@ public class ContratacaoConsumer {
 
       enderecoDTO = restTemplate.getForObject(url, EnderecoDTO.class);
 
-      // Se o endereço for encontrado na API, adiciona ao cache do Redis
       if (enderecoDTO != null && enderecoDTO.cep() != null) {
         redisCacheManager.cacheAddress(cep, enderecoDTO);
       }
+
+      log.info("Endereço encontrado na api VIA CEP!");
     } else {
       log.info("Endereço encontrado no cache do Redis!");
     }

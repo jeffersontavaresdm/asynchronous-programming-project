@@ -1,14 +1,12 @@
-package com.cep_consumer.job;
+package com.cep_consumer.util;
 
 import com.cep_consumer.entity.Cliente;
 import com.cep_consumer.entity.dto.EnderecoDTO;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
-@Slf4j
 public class RedisCacheManager {
 
   private static final String ENDERECO_CACHE_KEY_PREFIX = "endereco:";
@@ -21,7 +19,7 @@ public class RedisCacheManager {
     this.redisTemplate = redisTemplate;
   }
 
-  public EnderecoDTO getAddressFromCache(String cep) {
+  public EnderecoDTO getEnderecoByRedisCache(String cep) {
     String cacheKey = ENDERECO_CACHE_KEY_PREFIX + cep;
     return (EnderecoDTO) redisTemplate.opsForValue().get(cacheKey);
   }
