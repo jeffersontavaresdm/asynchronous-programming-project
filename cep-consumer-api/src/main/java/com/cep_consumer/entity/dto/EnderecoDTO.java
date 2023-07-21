@@ -2,6 +2,8 @@ package com.cep_consumer.entity.dto;
 
 import com.cep_consumer.entity.Endereco;
 
+import java.io.Serializable;
+
 public record EnderecoDTO(
   String cep,
   String logradouro,
@@ -13,7 +15,7 @@ public record EnderecoDTO(
   String gia,
   Integer ddd,
   Long siafi
-) {
+) implements Serializable {
   public Endereco toEntity() {
     return new Endereco(
       null,

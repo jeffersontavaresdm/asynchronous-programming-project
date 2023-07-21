@@ -1,5 +1,6 @@
 package com.cep_consumer.entity;
 
+import com.cep_consumer.entity.dto.EnderecoDTO;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -28,4 +29,19 @@ public class Endereco {
   private String gia;
   private Integer ddd;
   private Long siafi;
+
+  public EnderecoDTO toDTO() {
+    return new EnderecoDTO(
+      this.cep,
+      this.logradouro,
+      this.complemento,
+      this.bairro,
+      this.localidade,
+      this.uf,
+      this.ibge,
+      this.gia,
+      this.ddd,
+      this.siafi
+    );
+  }
 }

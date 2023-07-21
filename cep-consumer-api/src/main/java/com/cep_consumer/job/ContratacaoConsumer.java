@@ -19,13 +19,18 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Slf4j
 public class ContratacaoConsumer {
 
-  private final String VIA_CEP_URL = "https://viacep.com.br/ws/{cep}/json/";
   private final ClienteRepository clienteRepository;
   private final EnderecoRepository enderecoRepository;
+  private final RedisCacheManager redisCacheManager;
 
-  public ContratacaoConsumer(ClienteRepository clienteRepository, EnderecoRepository enderecoRepository) {
+  public ContratacaoConsumer(
+    ClienteRepository clienteRepository,
+    EnderecoRepository enderecoRepository,
+    RedisCacheManager redisCacheManager
+  ) {
     this.clienteRepository = clienteRepository;
     this.enderecoRepository = enderecoRepository;
+    this.redisCacheManager = redisCacheManager;
   }
 
   @SqsListener("consulta-cep-queue")
@@ -39,23 +44,48 @@ public class ContratacaoConsumer {
       throw new RuntimeException(e);
     }
 
-    log.info("Salvando dados do cliente de CPF {}", message.cpf());
-
-    String url = UriComponentsBuilder
-      .fromUriString(VIA_CEP_URL)
-      .buildAndExpand(message.cep())
-      .toUriString();
-
-    RestTemplate restTemplate = new RestTemplate();
-    EnderecoDTO enderecoDTO = restTemplate.getForObject(url, EnderecoDTO.class);
+    EnderecoDTO enderecoDTO = getAddressFromCacheOrApi(message.cep());
 
     if (enderecoDTO != null && enderecoDTO.cep() != null) {
       Endereco endereco = enderecoRepository.saveAndFlush(enderecoDTO.toEntity());
       Cliente cliente = clienteRepository.save(new Cliente(null, message.cliente(), endereco));
 
-      log.info("Cliente: {}", cliente);
+      // Adicione o cliente ao cache do Redis após salvar no banco
+      redisCacheManager.cacheCliente(cliente);
+
+      log.info("Cliente salvo no banco de dados. Cliente: {}", cliente.getNome());
     } else {
-      log.error("Endereço não encontrado...");
+      log.info("Endereço não encontrado!");
     }
+  }
+
+  public EnderecoDTO getAddressFromCacheOrApi(String cep) {
+    log.info("Buscando endereço no Redis!");
+
+    // Tenta buscar o endereço do cache do Redis
+    EnderecoDTO enderecoDTO = redisCacheManager.getAddressFromCache(cep);
+
+    // Se não encontrado no cache, busca na API ViaCEP
+    if (enderecoDTO == null) {
+      log.info("Buscando endereço no VIA CEP!");
+
+      RestTemplate restTemplate = new RestTemplate();
+      String VIA_CEP_URL = "https://viacep.com.br/ws/{cep}/json/";
+      String url = UriComponentsBuilder
+        .fromUriString(VIA_CEP_URL)
+        .buildAndExpand(cep)
+        .toUriString();
+
+      enderecoDTO = restTemplate.getForObject(url, EnderecoDTO.class);
+
+      // Se o endereço for encontrado na API, adiciona ao cache do Redis
+      if (enderecoDTO != null && enderecoDTO.cep() != null) {
+        redisCacheManager.cacheAddress(cep, enderecoDTO);
+      }
+    } else {
+      log.info("Endereço encontrado no cache do Redis!");
+    }
+
+    return enderecoDTO;
   }
 }
