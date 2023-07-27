@@ -1,0 +1,40 @@
+server:
+  port: 8082
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/mydb
+    username: mydb
+    password: mydb
+  jpa:
+    generate-ddl: true
+    hibernate:
+      ddl-auto: create-drop
+  cloud:
+    aws:
+      endpoint: http://localhost:4566
+      sqs:
+        region: us-east-1
+        listener:
+          max-concurrent-messages: 10
+      credentials:
+        access-key: access_key
+        secret-key: secret_access_key
+  cache:
+    type: redis
+management:
+  endpoints:
+    web:
+      base-path: /actuator
+      exposure:
+        include: health, metrics, prometheus
+  endpoint:
+    health:
+      group:
+        custom:
+          include: ping
+          show-components: always
+          show-details: always
+          status:
+            http-mapping:
+              up: 207

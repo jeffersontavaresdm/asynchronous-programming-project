@@ -1,12 +1,10 @@
 package com.cep_consumer.controller;
 
-
 import com.cep_consumer.entity.Cliente;
-import com.cep_consumer.service.CepConsumerService;
+import com.cep_consumer.repository.ClienteRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,21 +14,16 @@ import java.util.List;
 @RequestMapping("/cep-consumer")
 public class CepConsumerController {
 
-  private final CepConsumerService cepConsumerService;
+  private final ClienteRepository clienteRepository;
 
-  public CepConsumerController(CepConsumerService cepConsumerService) {
-    this.cepConsumerService = cepConsumerService;
+  public CepConsumerController(ClienteRepository clienteRepository) {
+    this.clienteRepository = clienteRepository;
   }
 
-  @GetMapping
-  public ResponseEntity<List<Cliente>> buscarClientes() {
-    List<Cliente> clientes = cepConsumerService.buscarClientes();
-    return ResponseEntity.status(HttpStatus.OK).body(clientes);
-  }
-
-  @GetMapping("/{id}")
-  public ResponseEntity<Cliente> buscarClientePorId(@PathVariable Long id) {
-    Cliente cliente = cepConsumerService.buscarClientePorId(id);
-    return ResponseEntity.status(HttpStatus.OK).body(cliente);
+  @GetMapping("/cliente")
+  public ResponseEntity<List<Cliente>> listar() {
+    return ResponseEntity
+      .status(HttpStatus.OK)
+      .body(clienteRepository.findAll());
   }
 }

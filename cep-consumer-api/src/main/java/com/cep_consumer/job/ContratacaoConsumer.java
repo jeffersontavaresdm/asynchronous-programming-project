@@ -75,9 +75,8 @@ public class ContratacaoConsumer {
 
       if (enderecoDTO != null && enderecoDTO.cep() != null) {
         redisCacheManager.cacheAddress(cep, enderecoDTO);
+        log.info("Endereço encontrado na api VIA CEP!");
       }
-
-      log.info("Endereço encontrado na api VIA CEP!");
     } else {
       log.info("Endereço encontrado no cache do Redis!");
     }
